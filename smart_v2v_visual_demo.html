@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart V2V Safety Broadcast System — Visual Demo</title>
+<style>
+  :root { --ink:#17324d; --muted:#5c7085; --bg:#f3f7fb; --panel:#fff; --green:#16845b; --red:#d93649; --blue:#2878c7; --amber:#d88a13; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Arial,Helvetica,sans-serif; color:var(--ink); background:var(--bg); }
+  header { padding:22px 18px; background:#12304b; color:white; }
+  header h1 { margin:0 0 7px; font-size:clamp(22px,4vw,32px); }
+  header p { margin:0; opacity:.9; line-height:1.45; }
+  main { max-width:1100px; margin:20px auto; padding:0 14px 30px; }
+  .note { background:#fff8e8; border-left:4px solid var(--amber); padding:12px 14px; border-radius:8px; margin-bottom:16px; line-height:1.45; }
+  .tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  button { border:0; border-radius:9px; padding:11px 14px; background:#e2ebf4; color:var(--ink); font-weight:700; cursor:pointer; }
+  button.active { background:#176bb2; color:#fff; }
+  button.action { background:#176bb2; color:white; }
+  button.danger { background:#c83245; color:white; }
+  .panel { background:var(--panel); border-radius:14px; padding:16px; box-shadow:0 3px 14px #17324d12; margin-bottom:15px; }
+  h2 { font-size:20px; margin:0 0 8px; }
+  .sub { color:var(--muted); margin:0 0 14px; line-height:1.4; }
+  .road { position:relative; overflow:hidden; border-radius:12px; background:#414b55; min-height:250px; padding:16px; color:white; }
+  .lane { position:absolute; left:0; right:0; height:3px; background:repeating-linear-gradient(to right,#ffffffb8 0 38px,transparent 38px 70px); }
+  .lane.one { top:33%; } .lane.two { top:66%; }
+  .roadlabel { position:absolute; top:8px; left:12px; font-size:12px; opacity:.8; }
+  .cars { display:flex; align-items:center; justify-content:space-around; gap:8px; position:relative; z-index:1; min-height:210px; }
+  .car { width:25%; max-width:190px; min-width:100px; text-align:center; transition:transform .35s; }
+  .carshape { margin:auto; width:72px; height:42px; border-radius:13px 13px 8px 8px; border:3px solid #dce9f4; background:#2878c7; position:relative; box-shadow:inset 0 -7px #174f86; }
+  .carshape:before { content:""; position:absolute; width:35px; height:18px; left:15px; top:4px; border-radius:5px; background:#cce7f7; border:1px solid #fff; }
+  .carshape:after { content:""; position:absolute; width:8px; height:7px; right:-3px; top:7px; background:#ffe69a; border-radius:2px; }
+  .car.a .carshape { background:#d93649; box-shadow:inset 0 -7px #9c1e2e; }
+  .car.b .carshape { background:#2878c7; }
+  .car.c .carshape { background:#16845b; box-shadow:inset 0 -7px #0d5c3e; }
+  .carname { font-weight:700; margin-top:7px; }
+  .status { font-size:12px; margin-top:4px; color:#e7edf4; }
+  .signal { min-height:28px; text-align:center; font-weight:700; color:#ffe49b; margin-top:5px; }
+  .signal.go:after { content:"  ━━━━━▶"; animation:pulse .8s infinite alternate; }
+  @keyframes pulse { from { opacity:.3; } to { opacity:1; } }
+  .controls { display:flex; flex-wrap:wrap; gap:9px; margin:12px 0; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+  .readout { padding:12px; background:#f3f7fb; border-radius:9px; min-height:88px; }
+  .readout strong { display:block; margin-bottom:5px; }
+  .badge { display:inline-block; border-radius:999px; padding:4px 8px; font-size:12px; font-weight:700; background:#dff5e9; color:#126847; }
+  .badge.red { background:#ffe1e5; color:#a91e30; }
+  .log { background:#122235; color:#d8e8f7; border-radius:10px; padding:12px; min-height:110px; font-family:Consolas,monospace; font-size:13px; white-space:pre-wrap; line-height:1.55; }
+  .hidden { display:none; }
+  .sideview { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .sidebox { border:2px dashed #b5c8d8; border-radius:12px; padding:15px; text-align:center; }
+  .sidebox .carshape { margin:12px auto; }
+  .sidebox.dangerbox { border-color:#d93649; background:#fff1f3; }
+  .sidebox.safebox { border-color:#16845b; background:#effbf5; }
+  footer { color:var(--muted); font-size:12px; line-height:1.5; margin-top:12px; }
+  @media(max-width:520px) { .road { padding:12px 5px; } .carshape { transform:scale(.85); } .car { min-width:84px; } .cars { gap:0; } .sideview { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Smart V2V Safety Broadcast System</h1>
+  <p>Interactive visual demonstration · Braking alert · Blind-spot warning · Multi-hop relay</p>
+</header>
+<main>
+  <div class="note"><strong>Demo status:</strong> This is a browser-based visual simulation of the logic in your three Python demo modules. It does not connect to real Arduino/RF hardware; signal strength and sensor events are simulated.</div>
+  <div class="tabs">
+    <button class="active" data-tab="brake">Module I · Braking Alert</button>
+    <button data-tab="blind">Module II · Blind-Spot Warning</button>
+    <button data-tab="relay">Module III · Multi-Hop Relay</button>
+  </div>
+
+  <section id="brake" class="panel">
+    <h2>Module I — Core Braking Alert</h2>
+    <p class="sub">Vehicle A detects sudden braking (threshold: 1.2 g) and sends a warning to nearby Vehicle B.</p>
+    <div class="road">
+      <div class="roadlabel">ROAD VIEW · VEHICLES TRAVELING IN THE SAME DIRECTION</div>
+      <div class="lane one"></div><div class="lane two"></div>
+      <div class="cars">
+        <div class="car a"><div class="carshape" id="brakeA"></div><div class="carname">Vehicle A</div><div class="status" id="brakeAstatus">Normal driving</div></div>
+        <div class="car b"><div class="carshape"></div><div class="carname">Vehicle B</div><div class="status" id="brakeBstatus">Waiting for packet</div><div class="signal" id="brakeSignal"></div></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="action" onclick="runBrake(false)">▶ Simulate normal driving</button>
+      <button class="danger" onclick="runBrake(true)">⚠ Simulate sudden braking</button>
+    </div>
+    <div class="grid">
+      <div class="readout"><strong>Sensor reading</strong><span id="brakeSensor">—</span></div>
+      <div class="readout"><strong>Vehicle B alert</strong><span id="brakeOutput" class="badge">Awaiting simulation</span></div>
+    </div>
+    <h3>Event log</h3><div class="log" id="brakeLog">Choose a scenario to begin.</div>
+  </section>
+
+  <section id="blind" class="panel hidden">
+    <h2>Module II — Blind-Spot Warning</h2>
+    <p class="sub">When Vehicle B's turn indicator is activated, its side-facing RF channel checks whether another vehicle is in the blind spot.</p>
+    <div class="sideview">
+      <div class="sidebox"><strong>Vehicle B · Ego vehicle</strong><div class="carshape"></div><span id="indicatorStatus">Indicator OFF</span></div>
+      <div class="sidebox" id="blindSide"><strong>Side / blind-spot area</strong><div class="carshape" id="blindCar" style="display:none;background:#d93649;box-shadow:inset 0 -7px #9c1e2e"></div><span id="blindPresence">No nearby vehicle shown</span></div>
+    </div>
+    <div class="controls">
+      <button class="action" onclick="runBlind(false)">↗ Signal lane change · Clear blind spot</button>
+      <button class="danger" onclick="runBlind(true)">⚠ Signal lane change · Vehicle present</button>
+      <button onclick="resetBlind()">Reset indicator</button>
+    </div>
+    <div class="grid">
+      <div class="readout"><strong>Side-channel RSSI</strong><span id="blindRssi">—</span></div>
+      <div class="readout"><strong>Lane-change decision</strong><span id="blindOutput" class="badge">Awaiting simulation</span></div>
+    </div>
+    <h3>Event log</h3><div class="log" id="blindLog">Choose a scenario to begin.</div>
+  </section>
+
+  <section id="relay" class="panel hidden">
+    <h2>Module III — Multi-Hop Chain-Braking Relay</h2>
+    <p class="sub">Vehicle A's alert reaches B directly. Vehicle B relays it to C, which is outside A's direct RF range.</p>
+    <div class="road">
+      <div class="roadlabel">A → B → C · DIRECT A → C LINK IS OUT OF RANGE</div>
+      <div class="lane one"></div><div class="lane two"></div>
+      <div class="cars">
+        <div class="car a"><div class="carshape"></div><div class="carname">Vehicle A</div><div class="status" id="relayAstatus">Normal</div></div>
+        <div class="car b"><div class="carshape"></div><div class="carname">Vehicle B</div><div class="status" id="relayBstatus">Ready</div><div class="signal" id="relaySignalB"></div></div>
+        <div class="car c"><div class="carshape"></div><div class="carname">Vehicle C</div><div class="status" id="relayCstatus">Ready</div><div class="signal" id="relaySignalC"></div></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="action" onclick="runRelay(false)">▶ Simulate normal driving</button>
+      <button class="danger" onclick="runRelay(true)">⚠ Simulate sudden braking + relay</button>
+    </div>
+    <div class="grid">
+      <div class="readout"><strong>Vehicle B</strong><span id="relayBoutput" class="badge">Awaiting simulation</span></div>
+      <div class="readout"><strong>Vehicle C</strong><span id="relayCoutput" class="badge">Awaiting simulation</span></div>
+    </div>
+    <h3>Event log</h3><div class="log" id="relayLog">Choose a scenario to begin.</div>
+  </section>
+  <footer>For presentation use: open this HTML file in a browser and click each scenario. The Python modules use randomized simulated sensor/RSSI values; this visual demo illustrates the intended logic and should not be presented as a real-world safety validation.</footer>
+</main>
+<script>
+document.querySelectorAll('.tabs button').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('active', b===btn));
+  document.querySelectorAll('main section').forEach(s => s.classList.toggle('hidden', s.id!==btn.dataset.tab));
+}));
+function rssi(strong) { return strong ? Math.floor(-50 + Math.random()*11) : Math.floor(-95 + Math.random()*16); }
+function badge(el, text, danger=false) { el.textContent=text; el.className='badge'+(danger?' red':''); }
+function runBrake(brake) {
+  const accel = brake ? (1.4+Math.random()*.6) : Math.random()*.3;
+  const detected = accel >= 1.2;
+  document.getElementById('brakeSensor').textContent = accel.toFixed(2)+' g (threshold 1.2 g)';
+  document.getElementById('brakeAstatus').textContent = detected ? 'SUDDEN BRAKING!' : 'Normal driving';
+  document.getElementById('brakeBstatus').textContent = detected ? 'BRAKE ALERT received' : 'Safe packet received';
+  document.getElementById('brakeSignal').className = 'signal'+(detected?' go':'');
+  badge(document.getElementById('brakeOutput'), detected ? 'BUZZER ON · RED LED · BRAKE ALERT' : 'BUZZER OFF · GREEN LED · SAFE', detected);
+  document.getElementById('brakeLog').textContent =
+    `[SENSOR] Vehicle A accelerometer: ${accel.toFixed(2)} g\n`+
+    `[LOGIC] brake_status = ${detected?1:0}\n`+
+    `[RF TX] Vehicle A broadcasts safety packet\n`+
+    `[RF RX] Vehicle B receives packet\n`+
+    (detected ? '[ALERT] Sudden braking detected at A\n[OUTPUT] Buzzer ON · Red LED · LCD: BRAKE ALERT' : '[OUTPUT] Buzzer OFF · Green LED · LCD: SAFE');
+}
+function runBlind(present) {
+  const val=rssi(present);
+  document.getElementById('indicatorStatus').textContent='Indicator ON';
+  document.getElementById('blindCar').style.display=present?'block':'none';
+  document.getElementById('blindPresence').textContent=present?'Vehicle detected beside Vehicle B':'Side area clear';
+  document.getElementById('blindSide').className='sidebox '+(present?'dangerbox':'safebox');
+  document.getElementById('blindRssi').textContent=val+' dBm (alert threshold −55 dBm)';
+  badge(document.getElementById('blindOutput'),present?'DANGER · LANE CHANGE BLOCKED':'SAFE · LANE CHANGE PERMITTED',present);
+  document.getElementById('blindLog').textContent =
+    '[INPUT] Vehicle B turn indicator activated\n[RF] Checking side-facing RF channel\n'+
+    `[RX] Side-channel RSSI = ${val} dBm (threshold −55 dBm)\n`+
+    (present?'[ALERT] Vehicle in blind spot!\n[OUTPUT] Buzzer ON · Red LED · LCD: BLIND SPOT\n[DECISION] Lane change blocked':'[OUTPUT] Buzzer OFF · Green LED · LCD: SAFE\n[DECISION] Lane change permitted');
+}
+function resetBlind() {
+  document.getElementById('indicatorStatus').textContent='Indicator OFF';
+  document.getElementById('blindCar').style.display='none';
+  document.getElementById('blindPresence').textContent='No nearby vehicle shown';
+  document.getElementById('blindSide').className='sidebox';
+  document.getElementById('blindRssi').textContent='—';
+  badge(document.getElementById('blindOutput'),'Indicator OFF · Side channel not checked');
+  document.getElementById('blindLog').textContent='[LOGIC] Indicator OFF → side channel not checked; normal operation.';
+}
+function runRelay(brake) {
+  const accel=brake?1.4+Math.random()*.6:Math.random()*.3;
+  const detected=accel>=1.2, ab=rssi(true), ac=rssi(false), bc=rssi(true);
+  document.getElementById('relayAstatus').textContent=detected?'SUDDEN BRAKING!':'Normal';
+  document.getElementById('relayBstatus').textContent=detected?'Alert received':'Safe packet';
+  document.getElementById('relayCstatus').textContent=detected?'Alert via relay':'No alert needed';
+  document.getElementById('relaySignalB').className='signal'+(detected?' go':'');
+  document.getElementById('relaySignalC').className='signal'+(detected?' go':'');
+  badge(document.getElementById('relayBoutput'),detected?'BUZZER ON · BRAKE ALERT':'SAFE · NO ALERT',detected);
+  badge(document.getElementById('relayCoutput'),detected?'BUZZER ON · RELAY ALERT':'SAFE · NO RELAY',detected);
+  document.getElementById('relayLog').textContent =
+    `[SENSOR] Vehicle A reading: ${accel.toFixed(2)} g\n`+
+    `[LOGIC] brake_status = ${detected?1:0}\n`+
+    (detected?
+      `[TX] A broadcasts braking alert\n[RX] B receives from A (RSSI ${ab} dBm)\n[ALERT] B warns driver; relay condition met\n[TX] B re-broadcasts packet (relay_flag = 1)\n[RX] C cannot use direct A signal (RSSI ${ac} dBm; out of range)\n[RX] C receives B's relayed packet (RSSI ${bc} dBm)\n[ALERT] C warns driver via relay\n[OUTPUT] B and C: buzzer ON · Red LED · BRAKE/RELAY ALERT`
+      : `[TX] A broadcasts normal-driving packet\n[RX] B receives packet; no alert needed\n[OUTPUT] B and C: buzzer OFF · Green LED · SAFE`);
+}
+</script>
+</body>
+</html>
